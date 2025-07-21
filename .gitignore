@@ -5,6 +5,12 @@ __pycache__/
 
 # C extensions
 *.so
+# 忽略任何目錄中的 setup.sh
+**/setup.sh  
+# 忽略檔名中有_copy的檔案與資料夾
+# 忽略任何目錄中的 _copy 目錄
+**/_copy/
+*_copy*
 
 # Distribution / packaging
 .Python

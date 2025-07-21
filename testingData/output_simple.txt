@@ -1,0 +1,190 @@
+### 課程概述
+
+- **課程簡介**:
+  本課程名為「程式設計(III)：進階C語言」，旨在幫助有C基礎的大一學生深入瞭解C語言的進階應用以及相關資料結構。
+
+- **學習目標**:
+  - 深入理解C語言的進階特性和資料結構
+  - 能夠獨立設計和實現複雜的程式
+  - 培養解決問題的能力和程式設計思維
+
+- **適用對象**:
+  大一學生，具備基本的C語言程式設計基礎知識。
+
+### 課程結構
+
+- **主要單元/模組**:
+  1. 進階C語言特性和技巧
+  2. 陣列和指標的進階應用
+  3. 字串處理和應用
+  4. 進階資料結構：結構體、連結串列等
+
+- **每個單元的學習重點**:
+  1. 指針和動態內存配置
+  2. 多維陣列、指標陣列
+  3. 字串函數、字串操作
+  4. 結構體的定義和使用、連結串列的實現
+
+- **建議學習時數**:
+  每單元約需2週，總共16週課程。
+
+### 詳細內容大綱
+
+1. **進階C語言特性和技巧**:
+   - 深入了解函數指針和函數指針數組
+   - 學習動態內存分配和釋放
+   - 實作函數指針的應用案例
+
+2. **陣列和指標的進階應用**:
+   - 學習多維陣列和指標的應用技巧
+   - 探討陣列與指標的關係及優化
+   - 實作複雜陣列操作的程式
+
+3. **字串處理和應用**:
+   - 掌握字串函數的使用和自定義函數
+   - 實作字串處理的應用程式
+   - 解決字串相關問題的程式設計
+
+4. **進階資料結構**:
+   - 瞭解結構體的概念和使用
+   - 學習連結串列的實現及應用
+   - 實作包含結構體和連結串列的複雜程式
+
+### 評估方式
+
+- **評量方法**:
+  - 每單元結束時進行程式設計作業
+  - 期末項目包括綜合性程式設計任務
+
+- **評分標準**:
+  - 程式的功能實現程度
+  - 程式碼的品質和可讀性
+  - 問題解決方法和創意性
+
+### 資源與參考資料
+
+- **推薦教材**:
+  - 《C語言程序設計進階篇》
+  - 《資料結構與演算法》
+
+- **額外學習資源**:
+  - 在線課程：Coursera、edX
+  - 程式設計練習平台：LeetCode、HackerRank
+
+這份課程大綱將有助於學生深入學習C語言並掌握進階的程式設計技巧和資料結構應用。希望對您的課程規劃有所幫助！
+
+Certainly! Below is a detailed course outline for "Programming Design (III) - Advanced C Programming" designed for first-year university students.
+
+```markdown
+# Programming Design (III) - Advanced C Programming
+
+## Course Overview
+
+### Course Introduction
+This course, "Programming Design (III) - Advanced C Programming," is designed to expand upon foundational C programming skills, introducing students to advanced concepts and techniques essential for complex problem-solving and software development. Students will engage in hands-on lab sessions to solidify their understanding and proficiency in using C for practical applications.
+
+### Learning Objectives
+- Master advanced C programming concepts, including arrays, strings, and advanced data structures.
+- Develop proficiency in implementing and manipulating linked lists, stacks, queues, and tree structures.
+- Learn and apply dynamic memory management and pointer manipulation.
+- Implement file I/O operations and data processing techniques.
+- Build practical programming projects that demonstrate advanced C features.
+- Prepare for advanced computer science courses and professional development.
+
+### Target Audience
+First-year university students in the Information Engineering and Computer Science department who have completed basic C programming coursework.
+
+## Course Structure
+
+### Main Units/Modules and Suggested Study Hours
+1. **Advanced C Programming Concepts** (6 hours)
+2. **Dynamic Data Structures** (12 hours)
+3. **File I/O and Data Processing** (6 hours)
+4. **Advanced Data Structures** (12 hours)
+5. **Practical Application and Project Development** (12 hours)
+
+## Detailed Content Outline
+
+### Unit 1: Advanced C Programming Concepts
+- **Key Learning Points:**
+  - Advanced use of arrays and strings
+  - Complex pointer operations
+  - Memory management techniques
+- **Specific Topics:**
+  - Multi-dimensional arrays
+  - Pointer arithmetic and void pointers
+  - Dynamic memory allocation (malloc, calloc, realloc, free)
+- **Practical Activities:**
+  - Exercises on pointer manipulation
+  - Lab on dynamic memory operations
+
+### Unit 2: Dynamic Data Structures
+- **Key Learning Points:**
+  - Understanding and implementation of linked lists
+  - Stack and queue operations
+- **Specific Topics:**
+  - Singly and doubly linked lists
+  - Stack implementation using arrays and linked lists
+  - Queue implementation using arrays and linked lists
+- **Practical Activities:**
+  - Implement a simple linked list
+  - Develop stack and queue operations
+
+### Unit 3: File I/O and Data Processing
+- **Key Learning Points:**
+  - File handling techniques in C
+  - Data processing and manipulation
+- **Specific Topics:**
+  - File opening, closing, reading, and writing
+  - Binary and text file operations
+- **Practical Activities:**
+  - Create programs for file reading and writing
+  - Develop a simple data processing application
+
+### Unit 4: Advanced Data Structures
+- **Key Learning Points:**
+  - Tree data structures and traversal algorithms
+- **Specific Topics:**
+  - Binary trees and binary search trees
+  - Tree traversal techniques (inorder, preorder, postorder)
+- **Practical Activities:**
+  - Implement a binary search tree
+  - Develop algorithms for tree traversal
+
+### Unit 5: Practical Application and Project Development
+- **Key Learning Points:**
+  - Application of advanced C programming concepts in real-world scenarios
+- **Specific Topics:**
+  - Project planning and implementation
+  - Integration of all learned concepts into a final project
+- **Practical Activities:**
+  - Develop a comprehensive project demonstrating advanced C features
+  - Present and defend project outcomes
+
+## Assessment Methods
+
+### Evaluation Methods
+- **Programming Assignments:** 40%
+  - Regular assignments focusing on applying advanced concepts
+- **Midterm Exam:** 25%
+  - Examination covering Units 1-3
+- **Final Project:** 25%
+  - A comprehensive project incorporating all course content
+- **Participation:** 10%
+  - Active participation in labs and class discussions
+
+## Resources and References
+
+### Recommended Materials
+- **Textbook:** "The C Programming Language" by Brian W. Kernighan and Dennis M. Ritchie
+- **Additional Reading:** "C Programming: A Modern Approach" by K. N. King
+
+### Additional Learning Resources
+- Online tutorials and coding platforms (e.g., Codecademy, LeetCode)
+- Access to the GCC compiler and Visual Studio Code for practical exercises
+- Supplementary video lectures and online forums for peer discussions
+
+---
+
+This course is designed to provide a structured, progressive learning experience that builds on existing knowledge and prepares students for more advanced studies in computer science.
+```

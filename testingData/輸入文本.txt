@@ -1,0 +1,25 @@
+課程主題：程式設計(III)
+目標學習者：有c基礎的大一學生
+課程期間：16週課程
+課程形式：實體授課 + 課堂實作
+
+具體需求：
+需要讓學生學會C語言
+包含陣列、字串、還有更進階的資料結構等
+
+Course Title: Programming Design (III) - Advanced C Programming
+Target Audience: First-year university students with C programming foundation
+Duration: 16-week semester course (48 contact hours)
+Delivery: Face-to-face instruction with hands-on lab sessions
+
+Core Requirements:
+- Master advanced C programming concepts including arrays, strings, and advanced data structures
+- Develop proficiency in linked lists, stacks, queues, and tree structures  
+- Learn dynamic memory management and pointer manipulation
+- Implement file I/O operations and data processing techniques
+- Build practical programming projects demonstrating advanced C features
+- Preparation for advanced computer science courses
+
+Prerequisites: Basic C programming knowledge (variables, control structures, functions)
+Assessment: Programming assignments (40%), Midterm (25%), Final project (25%), Participation (10%)
+Learning Environment: vscode with GCC compiler
