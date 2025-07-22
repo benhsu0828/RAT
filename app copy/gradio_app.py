@@ -7,49 +7,326 @@ from datetime import datetime
 import PyPDF2
 import docx
 from io import BytesIO
+
+# =============================================================================
+###new###
+# =============================================================================
+
+# from langchain_community.utilities import GoogleSearchAPIWrapper
+# from langchain_community.document_loaders import AsyncHtmlLoader
+# from langchain_community.document_transformers import Html2TextTransformer
+
+try:
+    # 嘗試使用新版本
+    from langchain_google_community import GoogleSearchAPIWrapper
+except ImportError:
+    # 備用方案：使用舊版本但忽略警告
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from langchain_community.utilities import GoogleSearchAPIWrapper
+
 import ssl
 import certifi
 import nest_asyncio
+
+# 修復異步事件循環
+nest_asyncio.apply()
+
+# 配置 SSL 設定
+ssl_context = ssl.create_default_context(cafile=certifi.where())
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE  # 注意：這會降低安全性
+
+# 設定環境變數
+os.environ['PYTHONHTTPSVERIFY'] = '0'
+os.environ['CURL_CA_BUNDLE'] = ''
+
+# =============================================================================
+
+os.environ["USER_AGENT"] = "RAT-App/1.0 (Retrieval-Augmented-Thoughts)"
+
+# 模型配置
+MODEL_TYPE = os.getenv('MODEL_TYPE', 'ollama')  # 可選: openai, ollama
+OpenAI_Model = "gpt-4o"  # OpenAI 模型名稱
+OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
+DEFAULT_OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama2')
+
+# chatgpt_system_prompt = f'''
+# You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.
+# Knowledge cutoff: 2023-04
+# Current date: {datetime.now().strftime('%Y-%m-%d')}
+# '''
+
+chatgpt_system_prompt = f'''
+You are a Senior Course Designer and Educational Consultant with over 15 years of experience in curriculum development across various academic disciplines. You have:
+
+**Professional Background:**
+- Ph.D. in Education with specialization in Curriculum and Instruction
+- Extensive experience in designing courses for universities, colleges, and professional training
+- Expert knowledge in learning theories, assessment methods, and instructional design
+- Published researcher in educational methodology and course effectiveness
+
+**Core Competencies:**
+- Bloom's Taxonomy application for learning objectives
+- Backward design methodology for curriculum planning
+- Multi-modal teaching strategies and active learning techniques
+- Assessment design and rubric development
+- Technology integration in education
+- Cross-cultural and inclusive education practices
+
+**Current Role:**
+- Design comprehensive course outlines with clear learning progressions
+- Integrate industry best practices and current trends
+- Ensure alignment between objectives, content, activities, and assessments
+- Provide practical teaching strategies and resource recommendations
+
+**Communication Style:**
+- Professional yet accessible language
+- Evidence-based recommendations
+- Structured and logical presentation
+- Focus on practical implementation
+
+Knowledge cutoff: 2023-04
+Current date: {datetime.now().strftime('%Y-%m-%d')}
+
+When designing courses, always consider:
+1. **Create a well-paced course outline that balances learning speed with content depth, ensuring students have adequate time to master each concept before progressing to more complex topics
+2. **Learning Pace Optimization**: Design content delivery that matches student cognitive capacity and allows for different learning speeds
+3. **Progressive Difficulty**: Structure topics from foundational concepts to advanced applications with logical scaffolding
+4. **Clear learning outcomes mapped to appropriate cognitive levels**
+5. **Authentic assessment opportunities that align with learning pace**
+6. **Real-world application and relevance**
+7. **Resource accessibility and variety**
+8. **Regular knowledge consolidation and review periods**
+'''
+
+# =============================================================================
+# 統一的模型調用介面
+# =============================================================================
+
+def call_ollama(model_name, messages, temperature=1.0, max_tokens=1000):
+    """調用 Ollama API"""
+    try:
+        # 構建提示
+        if len(messages) >= 2:
+            prompt = f"System: {messages[0]['content']}\nUser: {messages[1]['content']}\nAssistant:"
+        else:
+            prompt = messages[0]['content']
+        
+        url = f"{OLLAMA_BASE_URL}/api/generate"
+        data = {
+            "model": model_name,
+            "prompt": prompt,
+            "temperature": temperature,
+            "stream": False,
+            "options": {
+                "num_predict": max_tokens
+            }
+        }
+        
+        response = requests.post(url, json=data, timeout=60)
+        if response.status_code == 200:
+            return response.json()["response"]
+        else:
+            raise Exception(f"Ollama API error: {response.status_code}")
+    except Exception as e:
+        raise Exception(f"Ollama error: {str(e)}")
+
+def call_openai(messages, temperature=1.0, max_tokens=1000):
+    """調用 OpenAI API"""
+    try:
+        from openai import OpenAI
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise Exception("OPENAI_API_KEY not set")
+        
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=OpenAI_Model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        raise Exception(f"OpenAI error: {str(e)}")
+
+def get_available_model():
+    """根據環境變數和可用性決定使用哪個模型"""
+    # 檢查環境變數設定
+    model_preference = os.getenv('MODEL_TYPE', '').lower()
+    
+    if model_preference == 'openai' and os.getenv('OPENAI_API_KEY'):
+        return 'openai'
+    elif model_preference == 'ollama':
+        return 'ollama'
+    
+    # 自動檢測可用模型
+    if os.getenv('OPENAI_API_KEY'):
+        return 'openai'
+    else:
+        return 'ollama'  # 預設使用 Ollama
+
+def generate_response(messages, temperature=1.0, max_tokens=1000, model_type=None):
+    """統一的回應生成函數"""
+    if model_type is None:
+        model_type = get_available_model()
+    
+    print(f"[INFO] Using model: {model_type}")
+    if model_type == 'openai':
+            return call_openai(messages, temperature, max_tokens)
+    elif model_type == 'ollama':
+        return call_ollama(DEFAULT_OLLAMA_MODEL, messages, temperature, max_tokens)
+    else:
+        raise Exception(f"Unsupported model type: {model_type}")
+    
+def check_model_config():
+    """檢查模型配置"""
+    print("=== 模型配置檢查 ===")
+    print(f"環境變數 MODEL_TYPE: {os.getenv('MODEL_TYPE', 'None')}")
+    print(f"程式中的 MODEL_TYPE: {MODEL_TYPE}")
+    print(f"實際使用的模型: {get_available_model()} {OpenAI_Model}")
+    print(f"OpenAI API Key: {'已設定' if os.getenv('OPENAI_API_KEY') else '未設定'}")
+    print("==================")
+
+    """檢查 Google 搜尋 API 配置"""
+    print("\n=== Google 搜尋 API 配置檢查 ===")
+    
+    google_api_key = os.getenv('GOOGLE_API_KEY')
+    google_cse_id = os.getenv('GOOGLE_CSE_ID')
+
+    print(f"GOOGLE_API_KEY: {'✅ 已設定' if google_api_key else '❌ 未設定'}")
+    print(f"GOOGLE_CSE_ID: {'✅ 已設定' if google_cse_id else '❌ 未設定'}")
+    
+    if google_api_key:
+        print(f"API Key 前綴: {google_api_key[:15]}...")
+    
+    if google_cse_id:
+        print(f"CSE ID: {google_cse_id}")
+    
+    # 檢查 GoogleSearchAPIWrapper 是否可用
+    try:
+        from langchain_google_community import GoogleSearchAPIWrapper
+        print("✅ 新版 GoogleSearchAPIWrapper 可用")
+        wrapper_available = True
+    except ImportError:
+        try:
+            from langchain_community.utilities import GoogleSearchAPIWrapper
+            print("⚠️ 使用舊版 GoogleSearchAPIWrapper")
+            wrapper_available = True
+        except ImportError:
+            print("❌ GoogleSearchAPIWrapper 不可用")
+            wrapper_available = False
+    
+    # 如果 API 配置完整且 wrapper 可用，進行簡單測試
+    if google_api_key and google_cse_id and wrapper_available:
+        print("🔍 測試 Google 搜尋功能...")
+        try:
+            # 進行測試
+            search = GoogleSearchAPIWrapper(
+                google_api_key=google_api_key,
+                google_cse_id=google_cse_id,
+                k=1
+            )
+            
+            test_query = "python programming"
+            results = search.results(test_query, 1)
+            
+            if results and len(results) > 0:
+                print("✅ Google 搜尋功能測試成功")
+            else:
+                print("⚠️ Google 搜尋測試無結果，但 API 配置正確")
+                
+        except Exception as e:
+            print(f"❌ Google 搜尋測試失敗: {str(e)}")
+            print("   可能原因：API 金鑰無效、CSE ID 錯誤或網路問題")
+    else:
+        print("❌ Google 搜尋功能不可用")
+        if not google_api_key:
+            print("   - 缺少 GOOGLE_API_KEY 環境變數")
+        if not google_cse_id:
+            print("   - 缺少 GOOGLE_CSE_ID 環境變數")
+        if not wrapper_available:
+            print("   - GoogleSearchAPIWrapper 套件不可用")
+    
+    print("===============================\n")
+# 在程式開始時呼叫
+check_model_config()
+# =============================================================================
+# 原有的工具函數保持不變
+# =============================================================================
+
+from langchain.tools import Tool
 from langchain_community.utilities import GoogleSearchAPIWrapper
-
-# =============================================================================
-# 導入自定義模組
-# =============================================================================
-
-# 模型相關函數
-from core.config import (
-    get_available_model,
-    generate_response,
-    check_model_config,
-    chatgpt_system_prompt,
-    OpenAI_Model,
-    openai_client
-)
-
-# 搜尋相關函數
-from core.search import (
-    get_search,
-    get_page_content,
-    check_search_config
-)
-
-# 檔案處理相關函數
-from core.file_processing import (
-    process_uploaded_file,
-    extract_course_info
-)
-
-# 工具函數
-from core.chunk import (
-    num_tokens_from_string,
-    chunk_texts
-)
 
 # =============================================================================
 # 檔案處理和課程資訊提取
 # =============================================================================
+def process_uploaded_file(file):
+    #"""處理上傳的檔案"""
+    if file is None:
+        return ""
+    
+    file_content = ""
+    file_name = file.name.lower()
+    
+    try:
+        if file_name.endswith('.pdf'):
+            # 處理 PDF 檔案
+            with open(file.name, 'rb') as pdf_file:
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                for page in pdf_reader.pages:
+                    file_content += page.extract_text() + "\n"
+                    
+        elif file_name.endswith('.docx'):
+            # 處理 Word 檔案
+            doc = docx.Document(file.name)
+            for paragraph in doc.paragraphs:
+                file_content += paragraph.text + "\n"
+                
+        elif file_name.endswith('.txt'):
+            # 處理文字檔案
+            with open(file.name, 'r', encoding='utf-8') as txt_file:
+                file_content = txt_file.read()
+                
+        else:
+            return "不支援的檔案格式。請上傳 PDF、DOCX 或 TXT 檔案。"
+            
+    except Exception as e:
+        return f"讀取檔案時發生錯誤: {str(e)}"
+    
+    return file_content
 
+def extract_course_info(file_content):
+    """從檔案內容中提取課程關鍵資訊"""
+    extract_prompt = '''
+    Analyze the following course document content and extract key course information:
+    1. Course name and subject
+    2. Learning objectives
+    3. Main content areas
+    4. Target learners
+    5. Course level (beginner/intermediate/advanced)
+    6. Any special requirements or prerequisites
 
+    Please organize this information in a structured way for subsequent course outline generation.
+    '''
+    
+    messages = [
+        {
+            "role": "system",
+            "content": chatgpt_system_prompt
+        },
+        {
+            "role": "user",
+            "content": f"Course document content：\n{file_content}\n\n{extract_prompt}"
+        }
+    ]
+    
+    try:
+        return generate_response(messages, temperature=0.3, max_tokens=1000)
+    except Exception as e:
+        return f"提取課程資訊失敗: {str(e)}"
+    
 def process_course_content_with_chunking(course_info, user_requirements):
     """處理過長的課程內容，進行分塊處理"""
     
@@ -276,8 +553,6 @@ def get_course_draft(course_info, user_requirements):
     - Complex topics can span multiple weeks (e.g., arrays taught across Week 1 and Week 2)
     - Include both theoretical concepts and practical implementations
     - Provide specific subtopics and activities for each week
-    - Consider that students need time to absorb and practice
-    - Start with basic concepts and slowly build complexity
 
     **WEEKLY STRUCTURE TEMPLATE:**
     
@@ -385,6 +660,33 @@ def generate_course_search_query(course_info, user_requirements):
     except Exception as e:
         return f"course curriculum syllabus {course_info[:100]}"
 
+def generate_additional_search_queries(course_info):
+    """生成額外的搜尋查詢"""
+    additional_prompt = '''
+    Based on the course information, generate 2 additional search queries to find relevant:
+    1. Teaching methods and best practices
+    2. Learning resources and reference materials
+
+    One query per line, do not add numbering or other formatting.
+    '''
+    
+    messages = [
+        {
+            "role": "system",
+            "content": chatgpt_system_prompt
+        },
+        {
+            "role": "user",
+            "content": f"Course information：\n{course_info}\n\n{additional_prompt}"
+        }
+    ]
+    
+    try:
+        result = generate_response(messages, temperature=0.6, max_tokens=300)
+        return [query.strip() for query in result.split('\n') if query.strip()]
+    except Exception as e:
+        return []
+
 def enhance_course_outline(course_info, base_outline, search_results):
     """使用搜尋結果增強課程大綱"""
     enhance_prompt = '''
@@ -398,8 +700,6 @@ def enhance_course_outline(course_info, base_outline, search_results):
 
     Maintain the core structure of the original outline while significantly enhancing content depth and breadth.
     Output in Markdown format.
-
-    Just output the revised answer directly. DO NOT add additional explanations or annoucement in the revised answer unless you are asked to.
     '''
     
     # 整合搜尋結果
@@ -451,9 +751,110 @@ def format_course_outline(course_info, outline):
     except Exception as e:
         print(f"格式化失敗: {str(e)}")
         return outline
+# =============================================================================
+# Google 搜索工具
+# =============================================================================
+
+def get_search(query:str="", k:int=1):
+    search = GoogleSearchAPIWrapper(k=k)
+    def search_results(query):
+        return search.results(query, k)
+    tool = Tool(
+        name="Google Search Snippets",
+        description="Search Google for recent results.",
+        func=search_results,
+    )
+    ref_text = tool.run(query)
+    if 'Result' not in ref_text[0].keys():
+        return ref_text
+    else:
+        return None
+
+def get_page_content(link:str):
+    """安全的網頁內容抓取函數"""
+    try:
+        # 方法1: 使用 requests 替代 AsyncHtmlLoader
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+        
+        # 使用 requests 抓取，忽略 SSL 驗證
+        response = requests.get(
+            link, 
+            headers=headers, 
+            timeout=10,
+            verify=False,  # 忽略 SSL 驗證
+            allow_redirects=True
+        )
+        
+        if response.status_code == 200:
+            # 簡單的 HTML 清理
+            content = response.text
+            
+            # 移除 HTML 標籤的簡單方法
+            import re
+            # 移除 script 和 style 標籤
+            content = re.sub(r'<script.*?</script>', '', content, flags=re.DOTALL | re.IGNORECASE)
+            content = re.sub(r'<style.*?</style>', '', content, flags=re.DOTALL | re.IGNORECASE)
+            # 移除 HTML 標籤
+            content = re.sub(r'<[^>]+>', '', content)
+            # 清理多餘的空白
+            content = re.sub(r'\s+', ' ', content).strip()
+            
+            return content[:5000]  # 限制長度
+        else:
+            print(f"HTTP Error: {response.status_code} for {link}")
+            return None
+            
+    except Exception as e:
+        print(f"Error fetching {link}: {str(e)}")
+        
+        # 備用方案：使用更簡單的方法
+        try:
+            import urllib.request
+            import urllib.error
+            
+            # 創建忽略 SSL 的上下文
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            
+            req = urllib.request.Request(
+                link,
+                headers={'User-Agent': 'Mozilla/5.0 (compatible; RAT-Bot/1.0)'}
+            )
+            
+            with urllib.request.urlopen(req, context=ctx, timeout=10) as response:
+                content = response.read().decode('utf-8', errors='ignore')
+                # 簡單清理
+                import re
+                content = re.sub(r'<[^>]+>', '', content)
+                content = re.sub(r'\s+', ' ', content).strip()
+                return content[:5000]
+                
+        except Exception as e2:
+            print(f"Backup method also failed for {link}: {str(e2)}")
+            return None
+    #舊的
+    # loader = AsyncHtmlLoader([link])
+    # docs = loader.load()
+    # html2text = Html2TextTransformer()
+    # docs_transformed = html2text.transform_documents(docs)
+    # if len(docs_transformed) > 0:
+    #     return docs_transformed[0].page_content
+    # else:
+    #     return None
 
 import tiktoken
-
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 def chunk_text_by_sentence(text, chunk_size=2048):
     """Chunk the $text into sentences with less than 2k tokens."""
@@ -485,7 +886,31 @@ def chunk_text_front(text, chunk_size = 2048):
         char_num = int(len(text) * ratio)
         return text[:char_num]
 
+def chunk_texts(text, chunk_size = 2048):
+    '''
+    trunk the text into n parts, return a list of text
+    [text, text, text]
+    '''
+    tokens = num_tokens_from_string(text)
+    if tokens < chunk_size:
+        return [text]
+    else:
+        texts = []
+        n = int(tokens/chunk_size) + 1
+        # 计算每个部分的长度
+        part_length = len(text) // n
+        # 如果不能整除，则最后一个部分会包含额外的字符
+        extra = len(text) % n
+        parts = []
+        start = 0
 
+        for i in range(n):
+            # 对于前extra个部分，每个部分多分配一个字符
+            end = start + part_length + (1 if i < extra else 0)
+            parts.append(text[start:end])
+            start = end
+        return parts
+    
 from datetime import datetime
 
 from openai import OpenAI
@@ -506,8 +931,10 @@ Try to answer this question/instruction with step-by-step thoughts and make the 
 Use `\n\n` to split the answer into several paragraphs.
 Just respond to the instruction directly. DO NOT add additional explanations or introducement in the answer unless you are asked to.
 '''
+    # openai_client = OpenAI(api_key=openai.api_key)
+    openai_client = OpenAI(api_key = os.getenv('OPENAI_API_KEY'))
     draft = openai_client.chat.completions.create(
-        model=OpenAI_Model,
+        model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
@@ -539,8 +966,9 @@ So you should output the answer with ## to split the paragraphs.
 **IMPORTANT**
 Just output the query directly. DO NOT add additional explanations or introducement in the answer unless you are asked to.
 '''
+    openai_client = OpenAI(api_key = os.getenv('OPENAI_API_KEY'))
     splited_answer = openai_client.chat.completions.create(
-        model=OpenAI_Model,
+        model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
@@ -566,8 +994,10 @@ Try to make the query as relevant as possible to the last few sentences in the c
 **IMPORTANT**
 Just output the query directly. DO NOT add additional explanations or introducement in the answer unless you are asked to.
 '''
+    # openai_client = OpenAI(api_key = openai.api_key)
+    openai_client = OpenAI(api_key = os.getenv('OPENAI_API_KEY'))
     query = openai_client.chat.completions.create(
-        model=OpenAI_Model,
+        model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
@@ -586,7 +1016,7 @@ def get_content(query):
     """獲取網頁內容"""
     try:
         # 搜尋結果
-        res = get_search(query, 3)
+        res = get_search(query, 5)
         if not res:
             print(">>> No Google Search Result found")
             return None
@@ -611,7 +1041,20 @@ def get_content(query):
     except Exception as e:
         print(f">>> Content retrieval error: {str(e)}")
         return None
-
+    # res = get_search(query, 1)
+    # if not res:
+    #     print(">>> No good Google Search Result was found")
+    #     return None
+    # search_results = res[0]
+    # link = search_results['link'] # title, snippet
+    # res = get_page_content(link)
+    # if not res:
+    #     print(f">>> No content was found in {link}")
+    #     return None
+    # retrieved_text = res
+    # trunked_texts = chunk_texts(retrieved_text, 1500)
+    # trunked_texts = [trunked_text.replace('\n', " ") for trunked_text in trunked_texts]
+    # return trunked_texts
 
 def get_revise_answer(question, answer, content):
     revise_prompt = '''
@@ -626,9 +1069,10 @@ Add more details from retrieved text to the answer.
 Split the paragraphs with \n\n characters.
 Just output the revised answer directly. DO NOT add additional explanations or annoucement in the revised answer unless you are asked to.
 '''
-
+    # openai_client = OpenAI(api_key = openai.api_key)
+    openai_client = OpenAI(api_key = os.getenv('OPENAI_API_KEY'))
     revised_answer = openai_client.chat.completions.create(
-        model=OpenAI_Model,
+        model="gpt-3.5-turbo",
         messages=[
                 {
                     "role": "system",
@@ -653,8 +1097,9 @@ Try to keep the structure (multiple paragraphs with its subtitles) in the respon
 Split the paragraphs with \n\n characters.
 Just output the revised answer directly. DO NOT add additional explanations or annoucement in the revised answer unless you are asked to.
 '''
+    openai_client = OpenAI(api_key = os.getenv('OPENAI_API_KEY'))
     reflected_answer = openai_client.chat.completions.create(
-        model=OpenAI_Model,
+        model="gpt-3.5-turbo",
         messages=[
                 {
                     "role": "system",
@@ -677,13 +1122,13 @@ def get_content_wrapper(q, query):
     result = get_content(query)
     q.put(result)  # 将结果放入队列
 
-# def get_revise_answer_wrapper(q, question, answer, content):
-#     result = get_revise_answer(question, answer, content)
-#     q.put(result)
+def get_revise_answer_wrapper(q, question, answer, content):
+    result = get_revise_answer(question, answer, content)
+    q.put(result)
 
-# def get_reflect_answer_wrapper(q, question, answer):
-#     result = get_reflect_answer(question, answer)
-#     q.put(result)
+def get_reflect_answer_wrapper(q, question, answer):
+    result = get_reflect_answer(question, answer)
+    q.put(result)
 
 from multiprocessing import Process, Queue
 def run_with_timeout(func, timeout, *args, **kwargs):
@@ -724,6 +1169,68 @@ def generate_diff_html(text1, text2):
     return diff_html
 
 newline_char = '\n'
+
+def rat(question):
+    print(f"{datetime.now()} [INFO] Generating draft...")
+    draft = get_draft(question)
+    print(f"{datetime.now()} [INFO] Return draft.")
+    # print(f"##################### DRAFT #######################")
+    # print(draft)
+    # print(f"#####################  END  #######################")
+
+    print(f"{datetime.now()} [INFO] Processing draft ...")
+    # draft_paragraphs = split_draft(draft)
+    draft_paragraphs = split_draft_openai(question, draft)
+    print(f"{datetime.now()} [INFO] Draft is splitted into {len(draft_paragraphs)} sections.")
+    answer = ""
+    for i, p in enumerate(draft_paragraphs):
+        # print(str(i)*80)
+        print(f"{datetime.now()} [INFO] Revising {i+1}/{len(draft_paragraphs)} sections ...")
+        answer = answer + '\n\n' + p
+        # print(f"[{i}/{len(draft_paragraphs)}] Original Answer:\n{answer.replace(newline_char, ' ')}")
+
+        # query = get_query(question, answer)
+        print(f"{datetime.now()} [INFO] Generating query ...")
+        res = run_with_timeout(get_query_wrapper, 30, question, answer)
+        if not res:
+            print(f"{datetime.now()} [INFO] Generating query timeout, skipping...")
+            continue
+        else:
+            query = res
+        print(f">>> {i}/{len(draft_paragraphs)} Query: {query.replace(newline_char, ' ')}")
+
+        print(f"{datetime.now()} [INFO] Crawling network pages ...")
+        # content = get_content(query)
+        res = run_with_timeout(get_content_wrapper, 30, query)
+        if not res:
+            print(f"{datetime.now()} [INFO] Parsing network pages timeout, skipping ...")
+            continue
+        else:
+            content = res
+
+        LIMIT = 2
+        for j, c in enumerate(content):
+            if  j >= LIMIT: # limit rge number of network pages
+                break
+            print(f"{datetime.now()} [INFO] Revising answers with retrieved network pages...[{j}/{min(len(content),LIMIT)}]")
+            # answer = get_revise_answer(question, answer, c)
+            res = run_with_timeout(get_revise_answer_wrapper, 30, question, answer, c)
+            if not res:
+                print(f"{datetime.now()} [INFO] Revising answers timeout, skipping ...")
+                continue
+            else:
+                diff_html = generate_diff_html(answer, res)
+                display(HTML(diff_html))
+                answer = res
+            print(f"{datetime.now()} [INFO] Answer revised [{j}/{min(len(content),3)}]")
+        # print(f"[{i}/{len(draft_paragraphs)}] REVISED ANSWER:\n {answer.replace(newline_char, ' ')}")
+        # print()
+    res = run_with_timeout(get_reflect_answer_wrapper, 30, question, answer)
+    if not res:
+        print(f"{datetime.now()} [INFO] Reflecting answers timeout, skipping next steps...")
+    else:
+        answer = res
+    return draft, answer
 
 # =============================================================================
 # 在原有程式碼後添加清除函數
@@ -822,7 +1329,6 @@ def extract_course_info_chunked(file_content):
 # =============================================================================
 # Main Gradio Interface - English Version
 # =============================================================================
-
 
 with gr.Blocks(
     title=page_title,
@@ -1131,12 +1637,6 @@ with gr.Blocks(
 # =============================================================================
 
 if __name__ == "__main__":
-    print(f"{datetime.now()} [INFO] Checking model config...")
-    check_model_config()
-    print(f"{datetime.now()} [INFO] Checking Google Search API key...")
-    check_search_config()
-    print(f"{datetime.now()} [INFO] Starting Gradio app...")
-    # 啟動 Gradio 應用
     demo.launch(
         server_name="0.0.0.0",
         server_port=7860,
