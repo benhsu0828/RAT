@@ -123,12 +123,12 @@ def check_search_config():
     if google_cse_id:
         print(f"CSE ID: {google_cse_id}")
     
-    # try:
-    #     search = GoogleSearchAPIWrapper(k=1)
-    #     results = search.results("test", 1)
-    #     print(f"✅ 測試成功: {results}")
-    # except Exception as e:
-    #     print(f"❌ 測試失敗: {str(e)}")
-    # finally:
-    print("===============================\n")
+    try:
+        search = GoogleSearchAPIWrapper(k=1)
+        results = search.results("test", 1)
+        print(f"✅ 測試成功: {results}")
+    except Exception as e:
+        print(f"❌ 測試失敗: {str(e)}")
+    finally:
+        print("===============================\n")
 

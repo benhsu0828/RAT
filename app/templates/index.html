@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <div class="hero-content">
+            <h1 class="display-4 fw-bold text-white mb-3">
+                <i class="fas fa-brain me-3"></i>Course Outline Generating System
+            </h1>
+            <p class="lead mb-4">Use Retrieval-Augmented Thoughts for Intelligent Course Design</p>
+            <p class="fs-5 text-muted mb-4">
+                Current Model: <span class="badge bg-primary fs-6">{{ model_info.current_model }}</span>
+            </p>
+        </div>
+    </div>
+    <!-- Author Section -->
+    <div class="author-section text-center mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body py-4">
+                        <h5 class="text-muted mb-3">
+                            <i class="fas fa-graduation-cap me-2"></i>Academic Project
+                        </h5>
+                        <p class="mb-2">
+                            <strong>Author:</strong> 徐葆驊 (HSU, PAO-HUA), 林玟欣 (LIN, WEN-XIN)
+                        </p>
+                        <p class="mb-2">
+                            <strong>Institution:</strong> 逢甲大學 (Feng Chia University)
+                        </p>
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-flask me-1"></i>新南向學海築夢計畫 Research Project
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Feature Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card h-100 feature-card">
+                <div class="card-body">
+                    <div class="feature-icon text-primary mb-3">
+                        <i class="fas fa-graduation-cap fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Course Outline Generation</h5>
+                    <p class="card-text">
+                        Upload course documents or describe requirements, 
+                        automatically generate professional course outlines with web search enhancement.
+                    </p>
+                    <a href="{{ url_for('course_page') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-2"></i>Start Generating
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100 feature-card">
+                <div class="card-body">
+                    <div class="feature-icon text-success mb-3">
+                        <i class="fas fa-cogs fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">System Information</h5>
+                    <p class="card-text">
+                        View system status, API configurations, 
+                        and RAT processing flow information.
+                    </p>
+                    <a href="{{ url_for('system_page') }}" class="btn btn-success">
+                        <i class="fas fa-info-circle me-2"></i>View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-server me-2"></i>System Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="status-item">
+                                <i class="fas fa-robot text-primary me-2"></i>
+                                <strong>Model:</strong> {{ model_info.current_model }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="status-item">
+                                <i class="fas fa-{{ 'check text-success' if model_info.openai_configured else 'times text-danger' }} me-2"></i>
+                                <strong>OpenAI API:</strong> {{ 'Configured' if model_info.openai_configured else 'Not Configured' }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="status-item">
+                                <i class="fas fa-{{ 'check text-success' if model_info.google_configured else 'times text-danger' }} me-2"></i>
+                                <strong>Google Search:</strong> {{ 'Configured' if model_info.google_configured else 'Not Configured' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

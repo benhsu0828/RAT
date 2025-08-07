@@ -1097,7 +1097,7 @@ with gr.Blocks(
                 #### Environment Variables Configuration
                 ```bash
                 # Model Settings
-                export MODEL_TYPE=openai  # or ollama
+                export MODEL_TYPE=openai
                 export OPENAI_API_KEY="your-openai-key"
                 
                 # Google Search Settings

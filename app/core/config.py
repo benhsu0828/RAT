@@ -38,11 +38,10 @@ os.environ['CURL_CA_BUNDLE'] = ''
 os.environ["USER_AGENT"] = "RAT-App/1.0 (Retrieval-Augmented-Thoughts)"
 
 # 模型配置
-MODEL_TYPE = os.getenv('MODEL_TYPE', 'ollama')  # 可選: openai, ollama
+MODEL_TYPE = os.getenv('MODEL_TYPE', 'openai')
 OpenAI_Model = "gpt-4o"  # OpenAI 模型名稱
 openai_client = OpenAI(api_key = os.getenv('OPENAI_API_KEY'))
-OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-DEFAULT_OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama2')
+
 
 # chatgpt_system_prompt = f'''
 # You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.
@@ -96,35 +95,6 @@ When designing courses, always consider:
 # =============================================================================
 # 統一的模型調用介面
 # =============================================================================
-
-def call_ollama(model_name, messages, temperature=1.0, max_tokens=1000):
-    """調用 Ollama API"""
-    try:
-        # 構建提示
-        if len(messages) >= 2:
-            prompt = f"System: {messages[0]['content']}\nUser: {messages[1]['content']}\nAssistant:"
-        else:
-            prompt = messages[0]['content']
-        
-        url = f"{OLLAMA_BASE_URL}/api/generate"
-        data = {
-            "model": model_name,
-            "prompt": prompt,
-            "temperature": temperature,
-            "stream": False,
-            "options": {
-                "num_predict": max_tokens
-            }
-        }
-        
-        response = requests.post(url, json=data, timeout=60)
-        if response.status_code == 200:
-            return response.json()["response"]
-        else:
-            raise Exception(f"Ollama API error: {response.status_code}")
-    except Exception as e:
-        raise Exception(f"Ollama error: {str(e)}")
-
 def call_openai(messages, temperature=1.0, max_tokens=1000):
     """調用 OpenAI API"""
     try:
@@ -158,7 +128,7 @@ def get_available_model():
     if os.getenv('OPENAI_API_KEY'):
         return 'openai'
     else:
-        return 'ollama'  # 預設使用 Ollama
+        return 'ollama'
 
 def generate_response(messages, temperature=1.0, max_tokens=1000, model_type=None):
     """統一的回應生成函數"""
@@ -168,8 +138,6 @@ def generate_response(messages, temperature=1.0, max_tokens=1000, model_type=Non
     print(f"[INFO] Using model: {model_type}")
     if model_type == 'openai':
             return call_openai(messages, temperature, max_tokens)
-    elif model_type == 'ollama':
-        return call_ollama(DEFAULT_OLLAMA_MODEL, messages, temperature, max_tokens)
     else:
         raise Exception(f"Unsupported model type: {model_type}")
     

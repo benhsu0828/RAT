@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block title %}System Information - RAT{% endblock %}
+
+{% block head %}
+<style>
+    .status-card {
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .status-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    
+    .status-online {
+        background-color: #28a745;
+        box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+    }
+    
+    .status-offline {
+        background-color: #dc3545;
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+    }
+    
+    .status-warning {
+        background-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+    
+    .config-item {
+        padding: 12px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        border-radius: 4px;
+    }
+    
+    .config-item.configured {
+        border-left-color: #28a745;
+        background-color: #d4edda;
+    }
+    
+    .config-item.not-configured {
+        border-left-color: #dc3545;
+        background-color: #f8d7da;
+    }
+    
+    .flow-step {
+        position: relative;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        border-left: 5px solid #667eea;
+    }
+    
+    .flow-step::before {
+        content: attr(data-step);
+        position: absolute;
+        top: -10px;
+        left: 15px;
+        background: #667eea;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .code-block {
+        background-color: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        overflow-x: auto;
+    }
+    
+    .refresh-btn {
+        animation: none;
+    }
+    
+    .refresh-btn.spinning {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-cog me-2 text-primary"></i>
+                    System Information
+                </h2>
+                <button class="btn btn-outline-primary refresh-btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh Status
+                </button>
+            </div>
+            <p class="text-muted mt-2">View system status, configurations, and RAT processing flow</p>
+        </div>
+    </div>
+
+    <!-- System Status Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card status-card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-robot fa-3x text-primary"></i>
+                    </div>
+                    <h6 class="card-title">AI Model</h6>
+                    <p class="card-text" id="modelStatus">
+                        <span class="status-indicator status-online"></span>
+                        <span id="modelName">Loading...</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card status-card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-key fa-3x text-success"></i>
+                    </div>
+                    <h6 class="card-title">OpenAI API</h6>
+                    <p class="card-text" id="openaiStatus">
+                        <span class="status-indicator" id="openaiIndicator"></span>
+                        <span id="openaiText">Loading...</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card status-card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-3x text-info"></i>
+                    </div>
+                    <h6 class="card-title">Google Search</h6>
+                    <p class="card-text" id="googleStatus">
+                        <span class="status-indicator" id="googleIndicator"></span>
+                        <span id="googleText">Loading...</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card status-card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-server fa-3x text-warning"></i>
+                    </div>
+                    <h6 class="card-title">System Status</h6>
+                    <p class="card-text">
+                        <span class="status-indicator status-online"></span>
+                        <span>Online</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Details -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Configuration Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3"><i class="fas fa-brain me-2"></i>AI Model Configuration</h6>
+                            <div id="modelConfig">
+                                <div class="config-item">
+                                    <strong>Model Type:</strong> <span id="configModelType">Loading...</span>
+                                </div>
+                                <div class="config-item">
+                                    <strong>API Provider:</strong> <span id="configProvider">Loading...</span>
+                                </div>
+                                <div class="config-item">
+                                    <strong>Model Version:</strong> <span id="configVersion">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3"><i class="fas fa-search me-2"></i>Search Configuration</h6>
+                            <div id="searchConfig">
+                                <div class="config-item">
+                                    <strong>Google API Key:</strong> <span id="configGoogleApi">Loading...</span>
+                                </div>
+                                <div class="config-item">
+                                    <strong>Google CSE ID:</strong> <span id="configGoogleCse">Loading...</span>
+                                </div>
+                                <div class="config-item">
+                                    <strong>Search Quota:</strong> <span id="configQuota">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RAT Process Flow -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>RAT Process Flow</h5>
+                </div>
+                <div class="card-body">
+                    <div class="flow-step" data-step="1">
+                        <h6><i class="fas fa-upload me-2 text-primary"></i>Input Processing</h6>
+                        <p class="mb-2">Upload course documents or enter requirements</p>
+                        <ul class="small text-muted mb-0">
+                            <li>File format validation (PDF, DOCX, TXT)</li>
+                            <li>Content extraction and text processing</li>
+                            <li>Token counting and chunking for large files</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flow-step" data-step="2">
+                        <h6><i class="fas fa-brain me-2 text-success"></i>Course Information Extraction</h6>
+                        <p class="mb-2">AI-powered analysis of course requirements</p>
+                        <ul class="small text-muted mb-0">
+                            <li>Key information identification</li>
+                            <li>Learning objectives extraction</li>
+                            <li>Target audience analysis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flow-step" data-step="3">
+                        <h6><i class="fas fa-list me-2 text-info"></i>Base Outline Generation</h6>
+                        <p class="mb-2">Generate initial course structure</p>
+                        <ul class="small text-muted mb-0">
+                            <li>Weekly course breakdown</li>
+                            <li>Learning objectives alignment</li>
+                            <li>Assessment planning</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flow-step" data-step="4">
+                        <h6><i class="fas fa-search me-2 text-warning"></i>Web Search Enhancement</h6>
+                        <p class="mb-2">Retrieve additional educational resources</p>
+                        <ul class="small text-muted mb-0">
+                            <li>Google Custom Search API integration</li>
+                            <li>Educational content validation</li>
+                            <li>Resource quality assessment</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="flow-step" data-step="5">
+                        <h6><i class="fas fa-magic me-2 text-purple"></i>Enhanced Outline Generation</h6>
+                        <p class="mb-2">Final course outline with enriched content</p>
+                        <ul class="small text-muted mb-0">
+                            <li>Web-enhanced course details</li>
+                            <li>Additional teaching resources</li>
+                            <li>Comprehensive course structure</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Variables -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Environment Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Required environment variables for system operation:</p>
+                    <div class="code-block">
+# AI Model Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+MODEL_TYPE=openai  # or 'local' for local models
+
+# Google Search Configuration  
+GOOGLE_API_KEY=your_google_api_key_here
+GOOGLE_CSE_ID=your_custom_search_engine_id_here
+
+# Flask Configuration
+FLASK_SECRET_KEY=your_secret_key_here
+FLASK_ENV=development  # or 'production'
+
+# Optional: File Upload Settings
+MAX_CONTENT_LENGTH=16777216  # 16MB in bytes
+UPLOAD_FOLDER=uploads
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="config-item">
+                        <strong>Core Methods:</strong> RAT: Retrieval Augmented Thoughts
+                    </div>
+                    <div class="config-item">
+                        <strong>Framework:</strong> Flask + Bootstrap 5
+                    </div>
+                    <div class="config-item">
+                        <strong>Last Updated:</strong> <span id="lastUpdated">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Usage Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="config-item">
+                        <strong>API Calls Today:</strong> <span id="apiCalls">Loading...</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Courses Generated:</strong> <span id="coursesGenerated">Loading...</span>
+                    </div>
+                    <div class="config-item">
+                        <strong>Files Processed:</strong> <span id="filesProcessed">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+class SystemMonitor {
+    constructor() {
+        this.refreshBtn = document.getElementById('refreshBtn');
+        this.initializeEventListeners();
+        this.loadSystemStatus();
+        this.startPeriodicUpdate();
+    }
+    
+    initializeEventListeners() {
+        this.refreshBtn.addEventListener('click', () => {
+            this.loadSystemStatus();
+        });
+    }
+    
+    async loadSystemStatus() {
+        try {
+            this.setRefreshLoading(true);
+            
+            const response = await fetch('/api/system_status');
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            this.updateStatusCards(data);
+            this.updateConfigDetails(data);
+            this.updateSystemInfo(data);
+            
+        } catch (error) {
+            console.error('Failed to load system status:', error);
+            this.showError('Failed to load system status');
+        } finally {
+            this.setRefreshLoading(false);
+        }
+    }
+    
+    updateStatusCards(data) {
+        // AI Model Status
+        document.getElementById('modelName').textContent = data.model_type?.toUpperCase() || 'Unknown';
+        
+        // OpenAI API Status
+        const openaiIndicator = document.getElementById('openaiIndicator');
+        const openaiText = document.getElementById('openaiText');
+        
+        if (data.openai_configured) {
+            openaiIndicator.className = 'status-indicator status-online';
+            openaiText.textContent = 'Configured';
+        } else {
+            openaiIndicator.className = 'status-indicator status-offline';
+            openaiText.textContent = 'Not Configured';
+        }
+        
+        // Google Search Status
+        const googleIndicator = document.getElementById('googleIndicator');
+        const googleText = document.getElementById('googleText');
+        
+        if (data.google_configured && data.google_cse_configured) {
+            googleIndicator.className = 'status-indicator status-online';
+            googleText.textContent = 'Configured';
+        } else if (data.google_configured || data.google_cse_configured) {
+            googleIndicator.className = 'status-indicator status-warning';
+            googleText.textContent = 'Partial Config';
+        } else {
+            googleIndicator.className = 'status-indicator status-offline';
+            googleText.textContent = 'Not Configured';
+        }
+    }
+    
+    updateConfigDetails(data) {
+        // Model Configuration
+        document.getElementById('configModelType').textContent = data.model_type || 'Unknown';
+        document.getElementById('configProvider').textContent = data.openai_configured ? 'OpenAI' : 'Local/Other';
+        document.getElementById('configVersion').textContent = data.openai_configured ? 'GPT-4o' : 'N/A';
+        
+        // Search Configuration
+        document.getElementById('configGoogleApi').textContent = data.google_configured ? 'Configured ✓' : 'Not Set ✗';
+        document.getElementById('configGoogleCse').textContent = data.google_cse_configured ? 'Configured ✓' : 'Not Set ✗';
+        document.getElementById('configQuota').textContent = 'Checking...'; // This could be dynamic
+        
+        // Update config item styles
+        this.updateConfigStyles();
+    }
+    
+    updateConfigStyles() {
+        document.querySelectorAll('.config-item').forEach(item => {
+            const text = item.textContent;
+            if (text.includes('Configured ✓') || text.includes('OpenAI') || text.includes('GPT')) {
+                item.classList.add('configured');
+                item.classList.remove('not-configured');
+            } else if (text.includes('Not Set ✗') || text.includes('N/A') || text.includes('Unknown')) {
+                item.classList.add('not-configured');
+                item.classList.remove('configured');
+            }
+        });
+    }
+    
+    updateSystemInfo(data) {
+        document.getElementById('lastUpdated').textContent = data.timestamp || 'Unknown';
+        
+        // Mock statistics (you can implement real tracking)
+        document.getElementById('apiCalls').textContent = Math.floor(Math.random() * 100) + ' calls';
+        document.getElementById('coursesGenerated').textContent = Math.floor(Math.random() * 50) + ' courses';
+        document.getElementById('filesProcessed').textContent = Math.floor(Math.random() * 200) + ' files';
+    }
+    
+    setRefreshLoading(loading) {
+        if (loading) {
+            this.refreshBtn.disabled = true;
+            this.refreshBtn.querySelector('i').classList.add('spinning');
+        } else {
+            this.refreshBtn.disabled = false;
+            this.refreshBtn.querySelector('i').classList.remove('spinning');
+        }
+    }
+    
+    showError(message) {
+        // Create and show error alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+    
+    startPeriodicUpdate() {
+        // Update system status every 30 seconds
+        setInterval(() => {
+            this.loadSystemStatus();
+        }, 30000);
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new SystemMonitor();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Generation CSS Test</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- 🎯 導入您的自定義 CSS -->
+    <link href="app/static/css/style.css" rel="stylesheet">
+    
+    <!-- 額外的測試樣式 -->
+    <style>
+        .test-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 250px;
+        }
+        
+        .content-wrapper {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 測試暗色模式 */
+        body.dark-mode {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+        
+        .dark-mode .card {
+            background-color: #495057;
+            border-color: #6c757d;
+        }
+        
+        .dark-mode .result-content {
+            background-color: #495057;
+            color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- 測試控制面板 -->
+    <div class="test-controls">
+        <h6><i class="fas fa-cog me-2"></i>測試控制</h6>
+        <div class="d-grid gap-1">
+            <button class="btn btn-sm btn-primary" onclick="switchTab('basic')">基本大綱</button>
+            <button class="btn btn-sm btn-success" onclick="switchTab('enhanced')">增強大綱</button>
+            <button class="btn btn-sm btn-warning" onclick="toggleLoading()">載入狀態</button>
+            <button class="btn btn-sm btn-info" onclick="testAlert('success')">成功提示</button>
+            <button class="btn btn-sm btn-danger" onclick="testAlert('error')">錯誤提示</button>
+        </div>
+        <hr>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="darkMode" onchange="toggleDarkMode()">
+            <label class="form-check-label" for="darkMode">暗色模式</label>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="compactMode" onchange="toggleCompactMode()">
+            <label class="form-check-label" for="compactMode">緊湊模式</label>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-flask me-2 text-success"></i>
+                    CSS 測試頁面 - 課程生成結果
+                </h2>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    這個頁面用於測試課程生成結果的 CSS 樣式效果
+                </div>
+            </div>
+        </div>
+
+        <!-- 載入進度指示器 -->
+        <div id="progressSection" class="d-none mb-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <div class="spinner-border text-primary me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span id="progressText">正在生成課程大綱...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果顯示區域 -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="resultTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="basic-tab" data-bs-toggle="tab" href="#basic">
+                            <i class="fas fa-list me-1"></i>基本大綱
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="enhanced-tab" data-bs-toggle="tab" href="#enhanced">
+                            <i class="fas fa-star me-1"></i>增強大綱
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="resultTabContent">
+                    <!-- 基本大綱 -->
+                    <div class="tab-pane fade show active" id="basic">
+                        <div class="result-header mb-3">
+                            <h6><i class="fas fa-clipboard-list me-2"></i>基本課程大綱</h6>
+                            <p class="text-muted">初始的每週課程結構</p>
+                        </div>
+                        <div id="basicResult" class="result-content">
+                            <div class="content-wrapper">
+                                <h1>Python 程式設計基礎</h1>
+                                
+                                <h2>課程概述</h2>
+                                <p>這門 16 週的課程為計算機科學一年級學生介紹 Python 程式設計基礎。</p>
+                                
+                                <h2>每週課程安排</h2>
+                                
+                                <h3>第 1 週：程式設計簡介</h3>
+                                <ul>
+                                    <li><strong>學習目標：</strong>
+                                        <ul>
+                                            <li>理解什麼是程式設計</li>
+                                            <li>設置 Python 開發環境</li>
+                                            <li>撰寫你的第一個 Python 程式</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>涵蓋主題：</strong>
+                                        <ul>
+                                            <li>Python 的歷史</li>
+                                            <li>安裝 Python 和 IDE</li>
+                                            <li>基本語法和結構</li>
+                                            <li>列印語句和註解</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>活動：</strong>
+                                        <ul>
+                                            <li>Hello World 程式</li>
+                                            <li>環境設置實驗</li>
+                                            <li>基本輸入/輸出練習</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                
+                                <h3>第 2 週：變數和資料型別</h3>
+                                <ul>
+                                    <li><strong>學習目標：</strong>
+                                        <ul>
+                                            <li>理解 Python 中的不同資料型別</li>
+                                            <li>學習變數命名約定</li>
+                                            <li>練習型別轉換</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>涵蓋主題：</strong>
+                                        <ul>
+                                            <li>數字（int, float）</li>
+                                            <li>字串和字串操作</li>
+                                            <li>布林值</li>
+                                            <li>變數賦值和命名</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary copy-btn" onclick="copyContent('basic')">
+                                        <i class="fas fa-copy me-1"></i>複製內容
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 增強大綱 -->
+                    <div class="tab-pane fade" id="enhanced">
+                        <div class="result-header mb-3">
+                            <h6><i class="fas fa-magic me-2"></i>增強課程大綱</h6>
+                            <p class="text-muted">網路增強的課程大綱，包含額外資源</p>
+                        </div>
+                        <div id="enhancedResult" class="result-content">
+                            <div class="content-wrapper">
+                                <h1>Python 程式設計基礎 - 增強版</h1>
+                                
+                                <h2>課程概述</h2>
+                                <p>這門綜合性的 16 週課程為計算機科學一年級學生介紹 Python 程式設計基礎，並結合業界相關範例和實作專案。</p>
+                                
+                                <h2>每週課程安排</h2>
+                                
+                                <h3>第 1 週：程式設計簡介與開發環境</h3>
+                                <ul>
+                                    <li><strong>學習目標：</strong>
+                                        <ul>
+                                            <li>理解程式設計及其應用</li>
+                                            <li>設置專業的 Python 開發環境</li>
+                                            <li>撰寫並執行你的第一個 Python 程式</li>
+                                            <li>了解軟體開發生命週期</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>涵蓋主題：</strong>
+                                        <ul>
+                                            <li>Python 的歷史和哲學</li>
+                                            <li>安裝 Python、PyCharm/VSCode 和 Git</li>
+                                            <li>命令列基礎</li>
+                                            <li>虛擬環境和套件管理</li>
+                                            <li>程式碼版本控制概念</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>資源：</strong>
+                                        <ul>
+                                            <li>Python.org 官方教學</li>
+                                            <li>Real Python - Python 基礎</li>
+                                            <li>Automate the Boring Stuff</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>評估：</strong>
+                                        <ul>
+                                            <li>環境設置檢查表</li>
+                                            <li>簡單程式執行</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                
+                                <h3>第 2 週：變數、資料型別與記憶體管理</h3>
+                                <ul>
+                                    <li><strong>學習目標：</strong>
+                                        <ul>
+                                            <li>掌握 Python 的內建資料型別</li>
+                                            <li>理解記憶體分配和變數範圍</li>
+                                            <li>練習專業命名約定</li>
+                                            <li>實作型別檢查和驗證</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                
+                                <h2>專案導向學習</h2>
+                                <ul>
+                                    <li><strong>期中專案：</strong>個人財務計算器</li>
+                                    <li><strong>期末專案：</strong>文字冒險遊戲</li>
+                                    <li><strong>持續評估：</strong>每週程式設計挑戰</li>
+                                </ul>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary copy-btn" onclick="copyContent('enhanced')">
+                                        <i class="fas fa-copy me-1"></i>複製內容
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 測試 JavaScript -->
+    <script>
+        // 切換標籤頁
+        function switchTab(tabName) {
+            const tab = document.getElementById(tabName + '-tab');
+            if (tab) {
+                const bsTab = new bootstrap.Tab(tab);
+                bsTab.show();
+            }
+        }
+        
+        // 切換載入狀態
+        function toggleLoading() {
+            const progressSection = document.getElementById('progressSection');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressSection.classList.contains('d-none')) {
+                progressSection.classList.remove('d-none');
+                
+                const messages = [
+                    '分析需求中...',
+                    '處理上傳檔案...',
+                    '生成基本大綱...',
+                    '搜尋網路資源...',
+                    '增強內容...',
+                    '完成結果...'
+                ];
+                
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < messages.length) {
+                        progressText.textContent = messages[index];
+                        index++;
+                    } else {
+                        progressSection.classList.add('d-none');
+                        clearInterval(interval);
+                        testAlert('success');
+                    }
+                }, 1000);
+            } else {
+                progressSection.classList.add('d-none');
+            }
+        }
+        
+        // 測試警告訊息
+        function testAlert(type) {
+            const messages = {
+                'success': '課程大綱生成成功！',
+                'error': '生成過程發生錯誤，請重試。'
+            };
+            
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const message = messages[type];
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
+        
+        // 切換暗色模式
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+        
+        // 切換緊湊模式
+        function toggleCompactMode() {
+            const results = document.querySelectorAll('.result-content');
+            results.forEach(result => {
+                result.classList.toggle('compact-view');
+            });
+        }
+        
+        // 複製內容
+        function copyContent(type) {
+            const content = document.getElementById(type + 'Result').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = event.target.closest('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check me-1"></i>已複製！';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-primary');
+                }, 2000);
+            });
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('CSS 測試頁面載入完成');
+            testAlert('success');
+        });
+    </script>
+    
+    <!-- 額外的樣式調整 -->
+    <style>
+        .compact-view {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .compact-view h1, .compact-view h2, .compact-view h3 {
+            margin-top: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .compact-view ul {
+            margin-bottom: 0.5rem;
+        }
+        
+        .copy-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</body>
+</html>

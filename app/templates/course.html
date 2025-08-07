@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-graduation-cap me-2 text-primary"></i>
+                Course Outline Generator
+            </h2>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Upload course documents or enter requirements to generate professional course outlines with AI assistance.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-upload me-2"></i>Course Input</h6>
+                </div>
+                <div class="card-body">
+                    <form id="courseForm" enctype="multipart/form-data">
+                        <!-- 檔案上傳 -->
+                        <div class="mb-3">
+                            <label for="fileInput" class="form-label">
+                                <i class="fas fa-file me-1"></i>Upload Course Document
+                            </label>
+                            <input type="file" class="form-control" id="fileInput" 
+                                   accept=".pdf,.docx,.txt" name="file">
+                            <div class="form-text">Supported: PDF, DOCX, TXT (Max 16MB)</div>
+                        </div>
+
+                        <!-- 課程標題 -->
+                        <div class="mb-3">
+                            <label for="courseTitle" class="form-label">Course Title</label>
+                            <input type="text" class="form-control" id="courseTitle" 
+                                   placeholder="e.g., Python Programming Fundamentals">
+                        </div>
+
+                        <!-- 目標對象 -->
+                        <div class="mb-3">
+                            <label for="targetAudience" class="form-label">Target Audience</label>
+                            <textarea class="form-control" id="targetAudience" rows="2"
+                                      placeholder="e.g., First-year university students with foundational C programming knowledge"></textarea>
+                        </div>
+
+                        <!-- 課程時長 -->
+                        <div class="mb-3">
+                            <label for="courseDuration" class="form-label">Course Duration</label>
+                            <input type="text" class="form-control" id="courseDuration" 
+                                placeholder="e.g., 16 weeks">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="classHours" class="form-label">Class Hours</label>
+                            <div class="form-text">Weekly class schedule and time allocation</div>
+                            <input type="text" class="form-control" id="classHours" 
+                                placeholder="e.g., 3 hours theory classes + 3 hours lab per week">
+                        </div>
+
+                        <!-- 核心要求 -->
+                        <div class="mb-3">
+                            <label for="coreRequirements" class="form-label">Core Requirements</label>
+                            <textarea class="form-control" id="coreRequirements" rows="3"
+                                      placeholder="Key learning objectives and core content..."></textarea>
+                        </div>
+
+                        <!-- 附加要求 -->
+                        <div class="mb-3">
+                            <label for="requirementsInput" class="form-label">Additional Requirements</label>
+                            <textarea class="form-control" id="requirementsInput" rows="4"
+                                      placeholder="Any additional requirements, teaching methods, assessment criteria..."></textarea>
+                        </div>
+
+                        <!-- 搜尋選項 -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="enableSearch" checked>
+                                <label class="form-check-label" for="enableSearch">
+                                    <i class="fas fa-search me-1"></i>Enable Web Search Enhancement
+                                </label>
+                            </div>
+                            <div class="form-text">Search for relevant teaching resources to enrich the course outline</div>
+                        </div>
+
+                        <!-- 🔥 移除 Preview 按鈕，只保留主要功能按鈕 -->
+                        <div class="d-grid gap-2">
+                            <button type="button" id="generateBtn" class="btn btn-primary">
+                                <i class="fas fa-rocket me-2"></i>Generate Course Outline
+                            </button>
+                            <button type="button" id="clearBtn" class="btn btn-outline-secondary">
+                                <i class="fas fa-trash me-2"></i>Clear All
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- 進度指示器 -->
+            <div id="progressSection" class="d-none mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <div class="spinner-border text-primary me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span id="progressText">Generating course outline...</span>
+                        <div class="progress mt-2">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 生成結果顯示 -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-magic me-2 text-success"></i>Generated Course Outline
+                    </h6>
+                    <small class="text-muted">AI-enhanced course outline with web resources and teaching best practices</small>
+                </div>
+                <div class="card-body">
+                    <div id="generatedResult" class="result-content">
+                        <div class="text-center text-muted py-5">
+                            <div class="d-flex justify-content-center mb-3">
+                                <i class="fas fa-graduation-cap fa-3x"></i>
+                            </div>
+                            <p class="mb-2">Your generated course outline will appear here</p>
+                            <p>Fill in the course details and click "Generate Course Outline" to start</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/course.js') }}"></script>
+{% endblock %}
