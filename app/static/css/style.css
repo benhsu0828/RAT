@@ -59,10 +59,10 @@ body {
 /* Course Generation Page */
 .result-content {
     min-height: 400px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.2;
-    white-space: pre-wrap;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; /* 🔥 改為網頁字體 */
+    font-size: 16px; /* 🔥 設定正常字體大小 */
+    line-height: 1.6; /* 🔥 改善行間距 */
+    white-space: normal; /* 🔥 改為正常換行 */
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 8px;
@@ -146,8 +146,18 @@ footer {
     }
     
     .result-content {
-        font-size: 12px;
+        font-size: 14px; /* 🔥 手機端字體大小 */
         padding: 15px;
+    }
+    
+    .result-content h1 { font-size: 1.5rem; }
+    .result-content h2 { font-size: 1.3rem; }
+    .result-content h3 { font-size: 1.1rem; }
+    .result-content h4 { font-size: 1rem; }
+    
+    .result-content p,
+    .result-content li {
+        font-size: 14px;
     }
 }
 
@@ -181,31 +191,115 @@ footer {
 }
 
 .result-content h1 {
+    font-size: 1.8rem; /* 🔥 控制 h1 大小 */
+    color: var(--primary-color);
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-weight: 600;
     border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 5px;
+    padding-bottom: 8px;
 }
 
 .result-content h2 {
+    font-size: 1.4rem; /* 🔥 控制 h2 大小 */
+    color: var(--secondary-color);
+    margin-top: 18px;
+    margin-bottom: 12px;
+    font-weight: 600;
     border-bottom: 1px solid #dee2e6;
-    padding-bottom: 3px;
+    padding-bottom: 5px;
+}
+
+.result-content h3 {
+    font-size: 1.2rem; /* 🔥 控制 h3 大小 */
+    color: var(--dark-color);
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.result-content h4 {
+    font-size: 1.1rem; /* 🔥 控制 h4 大小 */
+    color: var(--dark-color);
+    margin-top: 12px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.result-content p {
+    font-size: 16px; /* 🔥 段落字體大小 */
+    margin-bottom: 12px;
+    line-height: 1.6;
 }
 
 .result-content ul,
 .result-content ol {
-    padding-left: 20px;
+    padding-left: 25px;
+    margin-bottom: 15px;
 }
 
 .result-content li {
-    margin-bottom: 5px;
+    font-size: 15px; /* 🔥 列表項目字體大小 */
+    margin-bottom: 6px;
+    line-height: 1.5;
 }
 
 .result-content strong {
     color: var(--dark-color);
+    font-weight: 600;
 }
 
-.result-content code {
-    background-color: #e9ecef;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 0.9em;
+.result-content em {
+    color: var(--secondary-color);
+    font-style: italic;
+}
+
+/* 生成內容包裝器樣式 */
+.generated-content {
+    font-size: 16px !important; /* 🔥 強制設定字體大小 */
+    line-height: 1.6 !important;
+    color: #333 !important;
+}
+
+.generated-content h1,
+.generated-content h2,
+.generated-content h3,
+.generated-content h4 {
+    font-weight: 600 !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.generated-content h1 { font-size: 1.8rem !important; }
+.generated-content h2 { font-size: 1.4rem !important; }
+.generated-content h3 { font-size: 1.2rem !important; }
+.generated-content h4 { font-size: 1.1rem !important; }
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .result-content {
+        font-size: 14px; /* 🔥 手機端字體大小 */
+        padding: 15px;
+    }
+    
+    .result-content h1 { font-size: 1.5rem; }
+    .result-content h2 { font-size: 1.3rem; }
+    .result-content h3 { font-size: 1.1rem; }
+    .result-content h4 { font-size: 1rem; }
+    
+    .result-content p,
+    .result-content li {
+        font-size: 14px;
+    }
+}
+
+/* 初始狀態樣式 */
+.result-content .text-center {
+    font-size: 16px !important;
+}
+
+.result-content .fa-graduation-cap {
+    font-size: 3rem !important; /* 🔥 控制圖標大小 */
+    color: #6c757d;
+    opacity: 0.7;
 }

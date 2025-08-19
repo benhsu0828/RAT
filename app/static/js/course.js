@@ -1,83 +1,81 @@
 class CourseGenerator {
     constructor() {
-        // 元素初始化 - 🔥 移除 preview 相關元素
+        // Elements
         this.formContainer = document.getElementById('courseForm');
         this.generateBtn = document.getElementById('generateBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.progressSection = document.getElementById('progressSection');
         this.progressText = document.getElementById('progressText');
         this.generatedResult = document.getElementById('generatedResult');
-        
-        // 檢查關鍵元素
+        // New: actions toolbar
+        this.resultActions = document.getElementById('resultActions');
+        this.copyResultBtn = document.getElementById('copyResultBtn');
+        this.downloadResultBtn = document.getElementById('downloadResultBtn');
+
+        // Guard
         if (!this.formContainer || !this.generateBtn) {
             console.error('ERROR: Required elements not found!');
             return;
         }
-        
+
         this.initializeEventListeners();
         console.log('CourseGenerator initialized successfully');
     }
-    
+
     initializeEventListeners() {
-        // 生成按鈕點擊事件
+        // Generate outline
         this.generateBtn.addEventListener('click', () => {
-            console.log('🚀 Generate button clicked');
             this.generateCourse();
         });
-        
-        // 清除按鈕點擊事件
+
+        // Clear form
         this.clearBtn.addEventListener('click', () => {
             this.clearForm();
         });
-        
-        // 🔥 移除所有 preview 相關的事件監聽器
+
+        // Result actions (outside toolbar)
+        if (this.copyResultBtn) {
+            this.copyResultBtn.addEventListener('click', () => this.copyResult());
+        }
+        if (this.downloadResultBtn) {
+            this.downloadResultBtn.addEventListener('click', () => this.downloadResult());
+        }
     }
-    
+
     async generateCourse() {
         console.log('🚀 === generateCourse() called ===');
-        
         try {
-            // 顯示載入狀態
             this.setLoading(true);
-            
-            // 構建請求數據
+
             const formData = new FormData();
-            
-            // 獲取檔案
+
+            // Optional file
             const fileInput = document.getElementById('fileInput');
-            if (fileInput.files.length > 0) {
+            if (fileInput?.files?.length > 0) {
                 formData.append('file', fileInput.files[0]);
                 console.log('📎 File attached:', fileInput.files[0].name);
             }
-            
-            // 構建結構化需求
+
+            // Structured requirements
             const structuredRequirements = this.buildCourseRequirements();
             formData.append('requirements', structuredRequirements);
-            
-            // 搜尋選項
+
+            // Search option
             const enableSearch = document.getElementById('enableSearch').checked;
             formData.append('enable_search', enableSearch);
-            
-            console.log('📝 Requirements built:', structuredRequirements);
-            console.log('🔍 Search enabled:', enableSearch);
-            
-            // 發送請求
+
             const response = await fetch('/api/generate_course', {
                 method: 'POST',
                 body: formData
             });
-            
             const data = await response.json();
-            console.log('📊 API Response:', data);
-            
+
             if (data.success) {
-                // 更新結果
                 this.updateResult(data.final_outline);
                 this.showAlert('Course outline generated successfully!', 'success');
             } else {
                 this.showAlert(`Error: ${data.error}`, 'danger');
             }
-            
         } catch (error) {
             console.error('❌ Generation error:', error);
             this.showAlert(`Error: ${error.message}`, 'danger');
@@ -85,98 +83,128 @@ class CourseGenerator {
             this.setLoading(false);
         }
     }
-    
+
     buildCourseRequirements() {
-        // 獲取結構化輸入
+        // Read inputs and build a structured string
         const courseTitle = document.getElementById('courseTitle')?.value?.trim() || '';
         const targetAudience = document.getElementById('targetAudience')?.value?.trim() || '';
         const courseDuration = document.getElementById('courseDuration')?.value?.trim() || '';
         const classHours = document.getElementById('classHours')?.value?.trim() || '';
         const coreRequirements = document.getElementById('coreRequirements')?.value?.trim() || '';
         const additionalRequirements = document.getElementById('requirementsInput')?.value?.trim() || '';
-        
-        // 構建完整需求
-        let requirements = [];
-        
-        if (courseTitle) requirements.push(`Course Title: ${courseTitle}`);
-        if (targetAudience) requirements.push(`Target Audience: ${targetAudience}`);
-        if (courseDuration) requirements.push(`Course Duration: ${courseDuration}`);
-        if (classHours) requirements.push(`Class Hours: ${classHours}`);
-        if (coreRequirements) requirements.push(`Core Learning Requirements: ${coreRequirements}`);
-        if (additionalRequirements) requirements.push(`Additional Requirements: ${additionalRequirements}`);
-        
-        return requirements.join('\n');
+
+        const parts = [];
+        if (courseTitle) parts.push(`Course Title: ${courseTitle}`);
+        if (targetAudience) parts.push(`Target Audience: ${targetAudience}`);
+        if (courseDuration) parts.push(`Course Duration: ${courseDuration}`);
+        if (classHours) parts.push(`Class Hours: ${classHours}`);
+        if (coreRequirements) parts.push(`Core Learning Requirements: ${coreRequirements}`);
+        if (additionalRequirements) parts.push(`Additional Requirements: ${additionalRequirements}`);
+
+        return parts.join('\n');
     }
-    
+
     updateResult(generatedOutline) {
         console.log('📋 Updating result...');
-        console.log('Generated outline length:', generatedOutline?.length || 0);
-        
-        // 更新生成結果
+        const content = generatedOutline || 'No course outline generated';
         if (this.generatedResult) {
-            this.generatedResult.innerHTML = this.formatContent(generatedOutline || 'No course outline generated');
-        }
-        
-        console.log('✅ Result updated successfully');
-    }
-    
-    formatContent(content) {
-        if (!content || content.trim() === '') {
-            return `
-                <div class="text-center text-muted py-5">
-                    <i class="fas fa-exclamation-circle fa-2x mb-3"></i>
-                    <p>No content available</p>
-                    <small>Please check your input and try again</small>
+            const html = this.markdownToHtml(content); // Use improved markdown parser
+            this.generatedResult.innerHTML = `
+                <div class="content-wrapper">
+                    <div class="generated-content p-3 bg-light rounded">
+                        ${html}
+                    </div>
                 </div>
             `;
         }
-        
-        // 基本的 Markdown 轉 HTML
-        let formatted = content
-            .replace(/\n/g, '<br>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/^# (.*$)/gm, '<h1 class="text-primary">$1</h1>')
-            .replace(/^## (.*$)/gm, '<h2 class="text-secondary">$1</h2>')
-            .replace(/^### (.*$)/gm, '<h3 class="text-dark">$1</h3>')
-            .replace(/^#### (.*$)/gm, '<h4 class="text-muted">$1</h4>')
-            .replace(/^- (.*$)/gm, '<li class="mb-1">$1</li>');
-        
-        // 包裝列表項目
-        formatted = formatted.replace(/(<li>.*?<\/li>)/gs, '<ul class="list-unstyled ps-3">$1</ul>');
-        
-        // 添加功能按鈕
-        const actionButtons = `
-            <div class="mt-4 d-flex gap-2">
-                <button class="btn btn-outline-primary copy-content-btn" onclick="copyContentToClipboard(this)">
-                    <i class="fas fa-copy me-1"></i>Copy Content
-                </button>
-                <button class="btn btn-outline-success download-btn" onclick="downloadContent(this)">
-                    <i class="fas fa-download me-1"></i>Download as Text
-                </button>
-                <button class="btn btn-outline-info share-btn" onclick="shareContent(this)">
-                    <i class="fas fa-share me-1"></i>Share
-                </button>
-            </div>
-        `;
-        
-        return `
-            <div class="content-wrapper">
-                <div class="generated-content p-3 bg-light rounded">
-                    ${formatted}
-                </div>
-                ${actionButtons}
-            </div>
-        `;
+        // Show actions toolbar once result is available
+        if (this.resultActions) {
+            this.resultActions.classList.remove('d-none');
+        }
+        console.log('✅ Result updated successfully');
     }
-    
+
+    // Simple Markdown parser: handles headings, unordered lists, bold/italic, paragraphs
+    markdownToHtml(markdown) {
+        // Normalize line breaks
+        const lines = (markdown || '').replace(/\r\n/g, '\n').split('\n');
+
+        // Inline formatting helper (bold/italic)
+        const inline = (text) =>
+            text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+        let html = '';
+        let inUl = false;
+
+        for (let raw of lines) {
+            const line = raw.trimEnd();
+
+            // Empty line -> break paragraph / close current list
+            if (line.trim() === '') {
+                if (inUl) {
+                    html += '</ul>';
+                    inUl = false;
+                }
+                html += '<br>';
+                continue;
+            }
+
+            // Headings (close list before heading)
+            let m;
+            if ((m = line.match(/^####\s+(.*)/))) {
+                if (inUl) { html += '</ul>'; inUl = false; }
+                html += `<h4>${inline(m[1])}</h4>`;
+                continue;
+            }
+            if ((m = line.match(/^###\s+(.*)/))) {
+                if (inUl) { html += '</ul>'; inUl = false; }
+                html += `<h3>${inline(m[1])}</h3>`;
+                continue;
+            }
+            if ((m = line.match(/^##\s+(.*)/))) {
+                if (inUl) { html += '</ul>'; inUl = false; }
+                html += `<h2>${inline(m[1])}</h2>`;
+                continue;
+            }
+            if ((m = line.match(/^#\s+(.*)/))) {
+                if (inUl) { html += '</ul>'; inUl = false; }
+                html += `<h1>${inline(m[1])}</h1>`;
+                continue;
+            }
+
+            // Unordered list items (- or *)
+            if ((m = line.match(/^[-*]\s+(.*)/))) {
+                if (!inUl) {
+                    html += '<ul>';
+                    inUl = true;
+                }
+                html += `<li>${inline(m[1])}</li>`;
+                continue;
+            }
+
+            // Normal paragraph line
+            if (inUl) {
+                html += '</ul>';
+                inUl = false;
+            }
+            html += `<p>${inline(line)}</p>`;
+        }
+
+        // Close a trailing list
+        if (inUl) html += '</ul>';
+
+        return html;
+    }
+
     setLoading(isLoading) {
         if (isLoading) {
             this.progressSection.classList.remove('d-none');
             this.generateBtn.disabled = true;
             this.generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
-            
-            // 更新進度文字
+
+            // Rotate progress messages
             const messages = [
                 'Analyzing requirements...',
                 'Generating initial outline...',
@@ -184,28 +212,19 @@ class CourseGenerator {
                 'Enhancing content...',
                 'Finalizing course outline...'
             ];
-            
             let index = 0;
             this.progressInterval = setInterval(() => {
-                if (index < messages.length) {
-                    this.progressText.textContent = messages[index];
-                    index++;
-                } else {
-                    index = 0; // 循環顯示
-                }
+                this.progressText.textContent = messages[index];
+                index = (index + 1) % messages.length;
             }, 2000);
-            
         } else {
             this.progressSection.classList.add('d-none');
             this.generateBtn.disabled = false;
             this.generateBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Generate Course Outline';
-            
-            if (this.progressInterval) {
-                clearInterval(this.progressInterval);
-            }
+            if (this.progressInterval) clearInterval(this.progressInterval);
         }
     }
-    
+
     showAlert(message, type) {
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
@@ -214,20 +233,13 @@ class CourseGenerator {
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
         const container = document.querySelector('.container');
         container.insertBefore(alertDiv, container.firstChild);
-        
-        // 自動移除警告
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.remove();
-            }
-        }, 5000);
+        setTimeout(() => { if (alertDiv.parentNode) alertDiv.remove(); }, 5000);
     }
-    
+
     clearForm() {
-        // 清除所有輸入欄位
+        // Clear inputs
         document.getElementById('fileInput').value = '';
         document.getElementById('courseTitle').value = '';
         document.getElementById('targetAudience').value = '';
@@ -235,8 +247,8 @@ class CourseGenerator {
         document.getElementById('classHours').value = '';
         document.getElementById('coreRequirements').value = '';
         document.getElementById('requirementsInput').value = '';
-        
-        // 清除結果
+
+        // Reset result
         this.generatedResult.innerHTML = `
             <div class="text-center text-muted py-5">
                 <i class="fas fa-graduation-cap fa-3x mb-3"></i>
@@ -244,88 +256,99 @@ class CourseGenerator {
                 <small>Fill in the course details and click "Generate Course Outline" to start</small>
             </div>
         `;
-        
+        // Hide actions toolbar until next result
+        if (this.resultActions) {
+            this.resultActions.classList.add('d-none');
+        }
         console.log('✅ Form cleared');
     }
-    
-    // 🔥 移除所有 preview 相關方法：
-    // - showPreview()
-    // - copyPreviewContent()
-}
 
-// 保留全域功能函數
-function copyContentToClipboard(button) {
-    const contentWrapper = button.closest('.content-wrapper');
-    const generatedContent = contentWrapper.querySelector('.generated-content');
-    const content = generatedContent.textContent.trim();
-    
-    navigator.clipboard.writeText(content).then(() => {
-        const originalText = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
-        button.classList.remove('btn-outline-primary');
-        button.classList.add('btn-success');
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('btn-success');
-            button.classList.add('btn-outline-primary');
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-    });
-}
+    // Copy result text (outside toolbar button)
+    copyResult() {
+        // Read plain text from the rendered result
+        const text = this.generatedResult?.innerText?.trim() || '';
+        if (!text) return;
 
-function downloadContent(button) {
-    const contentWrapper = button.closest('.content-wrapper');
-    const generatedContent = contentWrapper.querySelector('.generated-content');
-    const content = generatedContent.textContent.trim();
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `course-outline-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // 更新按鈕狀態
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-check me-1"></i>Downloaded!';
-    button.classList.remove('btn-outline-success');
-    button.classList.add('btn-success');
-    
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.classList.remove('btn-success');
-        button.classList.add('btn-outline-success');
-    }, 2000);
-}
+        // Success UI feedback
+        const onSuccess = () => {
+            const btn = this.copyResultBtn;
+            if (!btn) return;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = orig;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 1500);
+        };
 
-function shareContent(button) {
-    const contentWrapper = button.closest('.content-wrapper');
-    const generatedContent = contentWrapper.querySelector('.generated-content');
-    const content = generatedContent.textContent.trim();
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Generated Course Outline',
-            text: content,
-        }).then(() => {
-            console.log('Content shared successfully');
-        }).catch(err => {
-            console.error('Error sharing:', err);
-        });
-    } else {
-        // 備用方案：複製到剪貼簿
-        navigator.clipboard.writeText(content).then(() => {
-            alert('Content copied to clipboard for sharing!');
-        });
+        // Prefer Async Clipboard API in secure contexts
+        if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(onSuccess)
+                .catch(() => this.fallbackCopyText(text, onSuccess));
+        } else {
+            // Fallback for non-secure origins and older browsers
+            this.fallbackCopyText(text, onSuccess);
+        }
+    }
+
+    // Fallback copy using a hidden textarea (works on HTTP)
+    fallbackCopyText(text, onDone) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '-1000px';
+            ta.style.left = '-1000px';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (ok) {
+                onDone && onDone();
+            } else {
+                throw new Error('execCommand("copy") returned false');
+            }
+        } catch (e) {
+            console.error('Copy fallback failed:', e);
+            this.showAlert('Copy failed. Please select the text and press Cmd/Ctrl+C.', 'danger');
+        }
+    }
+
+    // Download result as .txt (outside toolbar button)
+    downloadResult() {
+        const text = this.generatedResult?.innerText?.trim() || '';
+        if (!text) return;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `course-outline-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        const btn = this.downloadResultBtn;
+        if (btn) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Downloaded!';
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = orig;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-success');
+            }, 1500);
+        }
     }
 }
 
-// 初始化
+// Init
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Course.js DOM loaded');
     window.courseGenerator = new CourseGenerator();

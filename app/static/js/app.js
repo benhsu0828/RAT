@@ -1,12 +1,12 @@
-// 全域應用程式 JavaScript
+// Global application JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化工具提示
+    // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // 自動關閉 alert
+    // Automatically close alert
     setTimeout(function() {
         var alerts = document.querySelectorAll('.alert');
         alerts.forEach(function(alert) {

@@ -197,9 +197,6 @@
                             <h6 class="text-primary mb-3"><i class="fas fa-brain me-2"></i>AI Model Configuration</h6>
                             <div id="modelConfig">
                                 <div class="config-item">
-                                    <strong>Model Type:</strong> <span id="configModelType">Loading...</span>
-                                </div>
-                                <div class="config-item">
                                     <strong>API Provider:</strong> <span id="configProvider">Loading...</span>
                                 </div>
                                 <div class="config-item">
@@ -216,9 +213,6 @@
                                 </div>
                                 <div class="config-item">
                                     <strong>Google CSE ID:</strong> <span id="configGoogleCse">Loading...</span>
-                                </div>
-                                <div class="config-item">
-                                    <strong>Search Quota:</strong> <span id="configQuota">Loading...</span>
                                 </div>
                             </div>
                         </div>
@@ -284,37 +278,6 @@
                             <li>Additional teaching resources</li>
                             <li>Comprehensive course structure</li>
                         </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Environment Variables -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Environment Configuration</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3">Required environment variables for system operation:</p>
-                    <div class="code-block">
-# AI Model Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-MODEL_TYPE=openai  # or 'local' for local models
-
-# Google Search Configuration  
-GOOGLE_API_KEY=your_google_api_key_here
-GOOGLE_CSE_ID=your_custom_search_engine_id_here
-
-# Flask Configuration
-FLASK_SECRET_KEY=your_secret_key_here
-FLASK_ENV=development  # or 'production'
-
-# Optional: File Upload Settings
-MAX_CONTENT_LENGTH=16777216  # 16MB in bytes
-UPLOAD_FOLDER=uploads
                     </div>
                 </div>
             </div>
@@ -437,14 +400,12 @@ class SystemMonitor {
     
     updateConfigDetails(data) {
         // Model Configuration
-        document.getElementById('configModelType').textContent = data.model_type || 'Unknown';
         document.getElementById('configProvider').textContent = data.openai_configured ? 'OpenAI' : 'Local/Other';
         document.getElementById('configVersion').textContent = data.openai_configured ? 'GPT-4o' : 'N/A';
         
         // Search Configuration
         document.getElementById('configGoogleApi').textContent = data.google_configured ? 'Configured ✓' : 'Not Set ✗';
         document.getElementById('configGoogleCse').textContent = data.google_cse_configured ? 'Configured ✓' : 'Not Set ✗';
-        document.getElementById('configQuota').textContent = 'Checking...'; // This could be dynamic
         
         // Update config item styles
         this.updateConfigStyles();

@@ -23,7 +23,7 @@
                 </div>
                 <div class="card-body">
                     <form id="courseForm" enctype="multipart/form-data">
-                        <!-- 檔案上傳 -->
+                        <!-- File Upload -->
                         <div class="mb-3">
                             <label for="fileInput" class="form-label">
                                 <i class="fas fa-file me-1"></i>Upload Course Document
@@ -33,21 +33,21 @@
                             <div class="form-text">Supported: PDF, DOCX, TXT (Max 16MB)</div>
                         </div>
 
-                        <!-- 課程標題 -->
+                        <!-- Course Title -->
                         <div class="mb-3">
                             <label for="courseTitle" class="form-label">Course Title</label>
                             <input type="text" class="form-control" id="courseTitle" 
                                    placeholder="e.g., Python Programming Fundamentals">
                         </div>
 
-                        <!-- 目標對象 -->
+                        <!-- Target Audience -->
                         <div class="mb-3">
                             <label for="targetAudience" class="form-label">Target Audience</label>
                             <textarea class="form-control" id="targetAudience" rows="2"
                                       placeholder="e.g., First-year university students with foundational C programming knowledge"></textarea>
                         </div>
 
-                        <!-- 課程時長 -->
+                        <!-- Course Duration -->
                         <div class="mb-3">
                             <label for="courseDuration" class="form-label">Course Duration</label>
                             <input type="text" class="form-control" id="courseDuration" 
@@ -61,22 +61,22 @@
                                 placeholder="e.g., 3 hours theory classes + 3 hours lab per week">
                         </div>
 
-                        <!-- 核心要求 -->
+                        <!-- Core Requirements -->
                         <div class="mb-3">
                             <label for="coreRequirements" class="form-label">Core Requirements</label>
                             <textarea class="form-control" id="coreRequirements" rows="3"
                                       placeholder="Key learning objectives and core content..."></textarea>
                         </div>
 
-                        <!-- 附加要求 -->
+                        <!-- Additional Requirements -->
                         <div class="mb-3">
                             <label for="requirementsInput" class="form-label">Additional Requirements</label>
                             <textarea class="form-control" id="requirementsInput" rows="4"
                                       placeholder="Any additional requirements, teaching methods, assessment criteria..."></textarea>
                         </div>
 
-                        <!-- 搜尋選項 -->
-                        <div class="mb-3">
+                        <!-- Search Options -->
+                        <!-- <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="enableSearch" checked>
                                 <label class="form-check-label" for="enableSearch">
@@ -84,9 +84,16 @@
                                 </label>
                             </div>
                             <div class="form-text">Search for relevant teaching resources to enrich the course outline</div>
+                        </div> -->
+                        <div class="mb-3">
+                            <!-- Info badge instead of a checkbox -->
+                            <span class="badge bg-success">
+                                <i class="fas fa-search me-1"></i>Web Search Enhancement enabled
+                            </span>
+                            <div class="form-text">The system will automatically search and enrich the outline.</div>
                         </div>
 
-                        <!-- 🔥 移除 Preview 按鈕，只保留主要功能按鈕 -->
+
                         <div class="d-grid gap-2">
                             <button type="button" id="generateBtn" class="btn btn-primary">
                                 <i class="fas fa-rocket me-2"></i>Generate Course Outline
@@ -101,7 +108,7 @@
         </div>
 
         <div class="col-lg-8">
-            <!-- 進度指示器 -->
+            <!-- Loading Indicator -->
             <div id="progressSection" class="d-none mb-3">
                 <div class="card border-primary">
                     <div class="card-body text-center">
@@ -117,7 +124,7 @@
                 </div>
             </div>
 
-            <!-- 生成結果顯示 -->
+            <!-- Generated Result Display -->
             <div class="card">
                 <div class="card-header">
                     <h6 class="mb-0">
@@ -134,6 +141,15 @@
                             <p class="mb-2">Your generated course outline will appear here</p>
                             <p>Fill in the course details and click "Generate Course Outline" to start</p>
                         </div>
+                    </div>
+                    
+                    <div id="resultActions" class="mt-3 d-flex gap-2 flex-wrap d-none">
+                        <button type="button" id="copyResultBtn" class="btn btn-outline-primary">
+                            <i class="fas fa-copy me-1"></i>Copy Content
+                        </button>
+                        <button type="button" id="downloadResultBtn" class="btn btn-outline-success">
+                            <i class="fas fa-download me-1"></i>Download as Text
+                        </button>
                     </div>
                 </div>
             </div>
