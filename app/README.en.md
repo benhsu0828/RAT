@@ -250,28 +250,6 @@ RAT/app/
 export FLASK_DEBUG=1
 python app.py
 ```
-
-## 👥 Project Information
-
-### Author
-**HSU, PAO-HUA (徐保華)**
-
-### Institution
-**Feng Chia University (逢甲大學)**
-
-### Project Type
-**Study Abroad Dream Project (學海築夢計畫)**
-
-### Technical Features
-- **Retrieval-Augmented Generation** (RAG)
-- **Multi-modal Content Processing**
-- **Intelligent Course Design**
-- **Web Resource Integration**
-
-## 📄 License
-
-This project is an academic research project. Please cite the source when using.
-
 ## 🔗 Related Links
 
 - [OpenAI Platform](https://platform.openai.com/)
